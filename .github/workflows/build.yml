@@ -8,13 +8,25 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v4
-      - run: apt-get update && apt-get install -y live-build
+      - run: apt-get update && apt-get install -y live-build qemu-system-x86 socat netpbm
       - run: |
           lb config --distribution trixie \
             --archive-areas "main contrib non-free-firmware" \
             --debian-installer none
           lb build
+      - name: Boot test and screenshot
+        continue-on-error: true
+        run: |
+          qemu-system-x86_64 -m 2048 -boot d -cdrom live-image-amd64.hybrid.iso \
+            -display none -vga std \
+            -monitor unix:/tmp/mon,server,nowait -daemonize
+          sleep 180
+          echo "screendump /tmp/shot.ppm" | socat - unix-connect:/tmp/mon
+          sleep 2
+          pnmtopng /tmp/shot.ppm > boot-screenshot.png
       - uses: actions/upload-artifact@v4
         with:
           name: maxos-iso
-          path: "*.iso"
+          path: |
+            *.iso
+            boot-screenshot.png
