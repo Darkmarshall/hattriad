@@ -3,3 +3,8 @@ foot
 firefox-esr
 network-manager
 git
+libgl1-mesa-dri
+xwayland
+fonts-dejavu-core
+libpam-systemd
+dbus-user-session
