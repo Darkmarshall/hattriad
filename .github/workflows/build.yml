@@ -20,7 +20,9 @@ jobs:
           qemu-system-x86_64 -m 2048 -boot d -cdrom live-image-amd64.hybrid.iso \
             -display none -vga std \
             -monitor unix:/tmp/mon,server,nowait -daemonize
-          sleep 180
+          sleep 20
+          echo "sendkey ret" | socat - unix-connect:/tmp/mon
+          sleep 200
           echo "screendump /tmp/shot.ppm" | socat - unix-connect:/tmp/mon
           sleep 2
           pnmtopng /tmp/shot.ppm > boot-screenshot.png
