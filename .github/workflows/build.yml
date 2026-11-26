@@ -13,7 +13,7 @@ jobs:
           lb config --distribution trixie \
             --archive-areas "main contrib non-free-firmware" \
             --debian-installer none \
-            --bootappend-live "boot=live components quiet splash hostname=maxos"
+            --bootappend-live "boot=live components quiet splash hostname=hattriad"
           lb build
       - name: Boot test and screenshot
         continue-on-error: true
@@ -33,5 +33,5 @@ jobs:
           path: boot-screenshot.png
       - uses: actions/upload-artifact@v4
         with:
-          name: maxos-iso
+          name: hattriad-iso
           path: "*.iso"

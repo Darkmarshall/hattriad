@@ -31,17 +31,17 @@ def main():
     dry = "--dry" in args
     files = [a for a in args if a != "--dry"]
     if not files:
-        print("usage: maxos-run [--dry] <file>")
+        print("usage: hattriad-run [--dry] <file>")
         sys.exit(1)
     path = files[0]
     if not os.path.isfile(path):
-        print("[maxos] file not found:", path)
+        print("[hattriad] file not found:", path)
         sys.exit(1)
     kind = detect(path)
     cmd = plan(kind, path)
-    print(f"[maxos] {path} -> {kind}")
+    print(f"[hattriad] {path} -> {kind}")
     if cmd is None:
-        print("[maxos] unknown type, not running it")
+        print("[hattriad] unknown type, not running it")
         sys.exit(2)
     if dry:
         print("[dry-run] would run:", " ".join(cmd))

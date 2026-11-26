@@ -1,7 +1,7 @@
-PRETTY_NAME="MaxOS (based on Debian GNU/Linux 13)"
-NAME="MaxOS"
-ID=maxos
+PRETTY_NAME="HatTriad (based on Debian GNU/Linux 13)"
+NAME="HatTriad"
+ID=hattriad
 ID_LIKE=debian
 VERSION_ID="0.1"
 VERSION="0.1 (experimental)"
-HOME_URL="https://github.com/Darkmarshall/maxos"
+HOME_URL="https://github.com/Darkmarshall/hattriad"
