@@ -10,3 +10,5 @@ libpam-systemd
 dbus-user-session
 swaybg
 python3
+pcmanfm
+mousepad
