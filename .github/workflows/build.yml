@@ -12,7 +12,8 @@ jobs:
       - run: |
           lb config --distribution trixie \
             --archive-areas "main contrib non-free-firmware" \
-            --debian-installer none
+            --debian-installer none \
+            --bootappend-live "boot=live components quiet splash hostname=maxos"
           lb build
       - name: Boot test and screenshot
         continue-on-error: true
