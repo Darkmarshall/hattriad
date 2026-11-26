@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+import subprocess, sys, os
+
+def detect(path):
+    with open(path, "rb") as f:
+        head = f.read(8)
+    if head[:2] == b"MZ":
+        return "windows"
+    if head[:4] == b"\x7fELF":
+        return "linux"
+    if head == b"!<arch>\n":
+        return "deb"
+    if head[:4] == b"\xd0\xcf\x11\xe0" and path.lower().endswith(".msi"):
+        return "msi"
+    return "unknown"
+
+def plan(kind, path):
+    full = os.path.abspath(path)
+    if kind == "windows":
+        return ["wine", full]
+    if kind == "msi":
+        return ["wine", "msiexec", "/i", full]
+    if kind == "linux":
+        return [full]
+    if kind == "deb":
+        return ["sudo", "apt", "install", "-y", full]
+    return None
+
+def main():
+    args = sys.argv[1:]
+    dry = "--dry" in args
+    files = [a for a in args if a != "--dry"]
+    if not files:
+        print("usage: maxos-run [--dry] <file>")
+        sys.exit(1)
+    path = files[0]
+    if not os.path.isfile(path):
+        print("[maxos] file not found:", path)
+        sys.exit(1)
+    kind = detect(path)
+    cmd = plan(kind, path)
+    print(f"[maxos] {path} -> {kind}")
+    if cmd is None:
+        print("[maxos] unknown type, not running it")
+        sys.exit(2)
+    if dry:
+        print("[dry-run] would run:", " ".join(cmd))
+        return
+    subprocess.run(cmd)
+
+main()

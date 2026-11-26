@@ -9,3 +9,4 @@ fonts-dejavu-core
 libpam-systemd
 dbus-user-session
 swaybg
+python3
