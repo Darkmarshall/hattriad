@@ -8,14 +8,16 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v4
-      - run: apt-get update && apt-get install -y live-build qemu-system-x86 socat netpbm
+      - run: apt-get update && apt-get install -y live-build qemu-system-x86 socat netpbm python3-pil
+      - name: Generate splash frames
+        run: python3 branding/make-splash.py config/includes.chroot/usr/share/plymouth/themes/hattriad
       - run: |
           lb config --distribution trixie \
             --archive-areas "main contrib non-free-firmware" \
             --debian-installer none \
             --bootappend-live "boot=live components quiet splash hostname=hattriad"
           lb build
-      - name: Boot test and screenshot
+      - name: Boot test and screenshots
         continue-on-error: true
         run: |
           qemu-system-x86_64 -m 2048 -boot d -cdrom live-image-amd64.hybrid.iso \
@@ -23,14 +25,22 @@ jobs:
             -monitor unix:/tmp/mon,server,nowait -daemonize
           sleep 20
           echo "sendkey ret" | socat - unix-connect:/tmp/mon
-          sleep 200
+          for i in 1 2 3 4 5 6 7 8; do
+            sleep 6
+            echo "screendump /tmp/s$i.ppm" | socat - unix-connect:/tmp/mon
+            sleep 1
+            pnmtopng /tmp/s$i.ppm > splash-$i.png
+          done
+          sleep 150
           echo "screendump /tmp/shot.ppm" | socat - unix-connect:/tmp/mon
           sleep 2
           pnmtopng /tmp/shot.ppm > boot-screenshot.png
       - uses: actions/upload-artifact@v4
         with:
-          name: boot-screenshot
-          path: boot-screenshot.png
+          name: boot-screenshots
+          path: |
+            boot-screenshot.png
+            splash-*.png
       - uses: actions/upload-artifact@v4
         with:
           name: hattriad-iso

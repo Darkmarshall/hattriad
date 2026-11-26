@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=HatTriad
+Description=Three hats drawn in blue line as the system boots
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/hattriad
+ScriptFile=/usr/share/plymouth/themes/hattriad/hattriad.script

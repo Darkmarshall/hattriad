@@ -1,0 +1,21 @@
+Window.SetBackgroundTopColor(0.043, 0.043, 0.118);
+Window.SetBackgroundBottomColor(0.043, 0.043, 0.118);
+
+frames = 24;
+for (i = 0; i <= frames; i++)
+  frame[i] = Image("hats-" + i + ".png");
+
+sprite = Sprite(frame[0]);
+sprite.SetX(Window.GetX() + (Window.GetWidth() - frame[0].GetWidth()) / 2);
+sprite.SetY(Window.GetY() + (Window.GetHeight() - frame[0].GetHeight()) / 2);
+
+shown = 0;
+fun on_progress(time, progress) {
+  n = Math.Int(progress * frames);
+  if (n > frames) n = frames;
+  if (n > shown) {
+    shown = n;
+    sprite.SetImage(frame[shown]);
+  }
+}
+Plymouth.SetBootProgressFunction(on_progress);
