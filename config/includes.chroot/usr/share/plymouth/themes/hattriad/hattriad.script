@@ -10,12 +10,29 @@ sprite.SetX(Window.GetX() + (Window.GetWidth() - frame[0].GetWidth()) / 2);
 sprite.SetY(Window.GetY() + (Window.GetHeight() - frame[0].GetHeight()) / 2);
 
 shown = 0;
-fun on_progress(time, progress) {
-  n = Math.Int(progress * frames);
+ticks = 0;
+boot_p = 0;
+duration = 750;   # about 15 seconds at 50 updates per second
+
+fun show(p) {
+  n = Math.Int(p * frames);
   if (n > frames) n = frames;
   if (n > shown) {
     shown = n;
     sprite.SetImage(frame[shown]);
   }
 }
+
+fun on_progress(time, progress) {
+  boot_p = progress;
+}
+
+fun on_refresh() {
+  ticks++;
+  p = ticks / duration;
+  if (boot_p > p) p = boot_p;
+  show(p);
+}
+
 Plymouth.SetBootProgressFunction(on_progress);
+Plymouth.SetRefreshFunction(on_refresh);
