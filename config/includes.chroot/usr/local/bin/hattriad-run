@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import subprocess, sys, os
+import os, re, subprocess, sys
+
+DATA = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+PREFIXES = os.path.join(DATA, "hattriad", "prefixes")   # one private Wine folder per app
+APPS = os.path.join(DATA, "applications")               # where menu entries live
 
 def detect(path):
     with open(path, "rb") as f:
@@ -14,38 +18,78 @@ def detect(path):
         return "msi"
     return "unknown"
 
-def plan(kind, path):
+def slug(text):
+    s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return s or "app"
+
+def app_id(path, name):
+    return slug(name or os.path.splitext(os.path.basename(path))[0])
+
+def plan(kind, path, name=None):
     full = os.path.abspath(path)
-    if kind == "windows":
-        return ["wine", full]
-    if kind == "msi":
-        return ["wine", "msiexec", "/i", full]
+    if kind in ("windows", "msi"):
+        prefix = os.path.join(PREFIXES, app_id(path, name))
+        cmd = ["wine", full] if kind == "windows" else ["wine", "msiexec", "/i", full]
+        return {"env": {"WINEPREFIX": prefix}, "cmd": cmd, "prefix": prefix}
     if kind == "linux":
-        return [full]
+        return {"env": {}, "cmd": [full], "prefix": None}
     if kind == "deb":
-        return ["sudo", "apt", "install", "-y", full]
+        return {"env": {}, "cmd": ["sudo", "apt", "install", "-y", full], "prefix": None}
     return None
+
+def launcher(path, name):
+    ident = app_id(path, name)
+    label = name or os.path.splitext(os.path.basename(path))[0]
+    text = ("[Desktop Entry]\nType=Application\nName=%s\n"
+            'Exec=hattriad-run --name %s "%s"\n'
+            "Categories=Wine;Application;\nTerminal=false\n") % (label, ident, os.path.abspath(path))
+    return os.path.join(APPS, "hattriad-%s.desktop" % ident), text
 
 def main():
     args = sys.argv[1:]
     dry = "--dry" in args
-    files = [a for a in args if a != "--dry"]
+    make_launcher = "--launcher" in args
+    name = None
+    if "--name" in args:
+        i = args.index("--name")
+        name = args[i + 1] if i + 1 < len(args) else None
+        del args[i:i + 2]
+    files = [a for a in args if not a.startswith("--")]
     if not files:
-        print("usage: hattriad-run [--dry] <file>")
+        print("usage: hattriad-run [--dry] [--name NAME] [--launcher] <file>")
         sys.exit(1)
     path = files[0]
     if not os.path.isfile(path):
         print("[hattriad] file not found:", path)
         sys.exit(1)
     kind = detect(path)
-    cmd = plan(kind, path)
+    p = plan(kind, path, name)
     print(f"[hattriad] {path} -> {kind}")
-    if cmd is None:
+    if p is None:
         print("[hattriad] unknown type, not running it")
         sys.exit(2)
-    if dry:
-        print("[dry-run] would run:", " ".join(cmd))
+    if make_launcher:
+        if kind not in ("windows", "linux"):
+            print("[hattriad] launchers are only made for programs")
+            sys.exit(2)
+        dest, text = launcher(path, name)
+        if dry:
+            print("[dry-run] would write:", dest)
+            print(text)
+            return
+        os.makedirs(APPS, exist_ok=True)
+        with open(dest, "w") as f:
+            f.write(text)
+        print("[hattriad] wrote", dest)
         return
-    subprocess.run(cmd)
+    if p["prefix"]:
+        print("[hattriad] private folder:", p["prefix"])
+    if dry:
+        env = " ".join("%s=%s" % kv for kv in p["env"].items())
+        print("[dry-run] would run:", (env + " " if env else "") + " ".join(p["cmd"]))
+        return
+    if p["prefix"]:
+        os.makedirs(p["prefix"], exist_ok=True)
+    subprocess.run(p["cmd"], env=dict(os.environ, **p["env"]))
 
 main()
