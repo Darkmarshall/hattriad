@@ -53,6 +53,10 @@ def make_splash():
     return img
 
 img = make_splash()
+if ROOT.endswith('.png'):
+    img.save(ROOT)
+    print('wrote', ROOT)
+    sys.exit(0)
 done = 0
 for dirpath, dirs, files in os.walk(ROOT):
     svgs = [f for f in files if f.startswith("splash.svg")]

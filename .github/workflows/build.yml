@@ -16,9 +16,10 @@ jobs:
             --archive-areas "main contrib non-free-firmware" \
             --debian-installer none \
             --bootappend-live "boot=live components quiet splash hostname=hattriad"
-          cp -r /usr/share/live/build/bootloaders config/bootloaders
-          python3 branding/make-bootsplash.py config/bootloaders
+          mkdir -p config/includes.binary/isolinux
+          python3 branding/make-bootsplash.py config/includes.binary/isolinux/splash.png
           lb build
+          md5sum config/includes.binary/isolinux/splash.png binary/isolinux/splash.png || true
       - name: Boot test and screenshots
         continue-on-error: true
         run: |
